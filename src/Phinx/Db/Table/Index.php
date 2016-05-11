@@ -66,6 +66,11 @@ class Index
     protected $limit = null;
 
     /**
+     * @var null|string
+     */
+    protected $append = null;
+
+    /**
      * Sets the index columns.
      *
      * @param array $columns
@@ -154,6 +159,24 @@ class Index
     }
 
     /**
+     * @return null|string
+     */
+    public function getAppend()
+    {
+        return $this->append;
+    }
+
+    /**
+     * @param null|string $append
+     * @return Index
+     */
+    public function setAppend($append)
+    {
+        $this->append = $append;
+        return $this;
+    }
+
+    /**
      * Utility method that maps an array of index options to this objects methods.
      *
      * @param array $options Options
@@ -163,7 +186,7 @@ class Index
     public function setOptions($options)
     {
         // Valid Options
-        $validOptions = array('type', 'unique', 'name', 'limit');
+        $validOptions = array('type', 'unique', 'name', 'limit', 'append');
         foreach ($options as $option => $value) {
             if (!in_array($option, $validOptions)) {
                 throw new \RuntimeException('\'' . $option . '\' is not a valid index option.');
