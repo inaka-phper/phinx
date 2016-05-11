@@ -69,6 +69,11 @@ class ForeignKey
     protected $constraint;
 
     /**
+     * @var null|string
+     */
+    protected $name = null;
+
+    /**
      * Sets the foreign key columns.
      *
      * @param array|string $columns
@@ -214,7 +219,7 @@ class ForeignKey
     public function setOptions($options)
     {
         // Valid Options
-        $validOptions = array('delete', 'update', 'constraint');
+        $validOptions = array('delete', 'update', 'constraint', 'name');
         foreach ($options as $option => $value) {
             if (!in_array($option, $validOptions)) {
                 throw new \RuntimeException('\'' . $option . '\' is not a valid foreign key option.');
@@ -232,6 +237,24 @@ class ForeignKey
         }
 
         return $this;
+    }
+
+    /**
+     * @param null|string $name
+     * @return ForeignKey
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**
