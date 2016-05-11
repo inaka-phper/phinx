@@ -30,6 +30,7 @@ namespace Phinx\Db\Adapter;
 
 use Phinx\Db\Table;
 use Phinx\Db\Table\Column;
+use Phinx\Db\Table\Constraint;
 use Phinx\Db\Table\Index;
 use Phinx\Db\Table\ForeignKey;
 use Phinx\Migration\MigrationInterface;
@@ -240,6 +241,14 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         if (!empty($foreignKeys)) {
             foreach ($foreignKeys as $foreignKey) {
                 $sql .= ', ' . $this->getForeignKeySqlDefinition($foreignKey, $table->getName());
+            }
+        }
+
+        // set the constraint
+        $constraints = $table->getConstraints();
+        if (!empty($constraints)) {
+            foreach ($constraints as $constraint) {
+                $sql .= ', ' . $this->getConstraintSqlDefinition($constraint, $table->getName());
             }
         }
 
@@ -740,6 +749,63 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     /**
      * {@inheritdoc}
      */
+    public function addConstraint(Table $table, Constraint $constraint)
+    {
+        $this->startCommandTimer();
+        $this->writeCommand('addConstraint', array($table->getName(), $constraint->getColumns()));
+        $sql = sprintf(
+            'ALTER TABLE %s ADD %s',
+            $this->quoteTableName($table->getName()),
+            $this->getConstraintSqlDefinition($constraint, $table->getName())
+        );
+        $this->execute($sql);
+        $this->endCommandTimer();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function dropConstraint($tableName, $columns, $constraint = null)
+    {
+        $this->startCommandTimer();
+        if (is_string($columns)) {
+            $columns = array($columns); // str to array
+        }
+        $this->writeCommand('dropConstraint', array($tableName, $columns));
+
+        if ($constraint) {
+            $this->execute(
+                sprintf(
+                    'ALTER TABLE %s DROP CONSTRAINT %s',
+                    $this->quoteTableName($tableName),
+                    $constraint
+                )
+            );
+        } else {
+            foreach ($columns as $column) {
+                $rows = $this->fetchAll(sprintf(
+                    "SELECT CONSTRAINT_NAME
+                      FROM information_schema.KEY_COLUMN_USAGE
+                      WHERE TABLE_SCHEMA = CURRENT_SCHEMA()
+                        AND TABLE_NAME IS NOT NULL
+                        AND TABLE_NAME = '%s'
+                        AND COLUMN_NAME = '%s'
+                      ORDER BY POSITION_IN_UNIQUE_CONSTRAINT",
+                    $tableName,
+                    $column
+                ));
+
+                foreach ($rows as $row) {
+                    $this->dropConstraint($tableName, $columns, $row['constraint_name']);
+                }
+            }
+        }
+        $this->endCommandTimer();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getSqlType($type, $limit = null)
     {
         switch ($type) {
@@ -1033,6 +1099,30 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         if ($foreignKey->getOnUpdate()) {
             $def .= " ON UPDATE {$foreignKey->getOnUpdate()}";
         }
+        return $def;
+    }
+
+    /**
+     * Gets the PostgreSQL Constraint Definition for an Constraint object.
+     *
+     * @param Constraint $constraint
+     * @param string     $tableName  Table name
+     * @return string
+     */
+    protected function getConstraintSqlDefinition(Constraint $constraint, $tableName)
+    {
+        if (is_string($constraint->getName())) {
+            $constraintName = $constraint->getName();
+        } else {
+            $constraintName = $tableName . '_' . implode('_', $constraint->getColumns());
+        }
+        $def = sprintf(
+            ' CONSTRAINT "%s" %s ("%s")',
+            $constraintName,
+            $constraint->getType(),
+            implode('", "', $constraint->getColumns())
+        );
+
         return $def;
     }
 

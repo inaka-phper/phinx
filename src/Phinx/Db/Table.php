@@ -29,6 +29,7 @@
 namespace Phinx\Db;
 
 use Phinx\Db\Table\Column;
+use Phinx\Db\Table\Constraint;
 use Phinx\Db\Table\Index;
 use Phinx\Db\Table\ForeignKey;
 use Phinx\Db\Adapter\AdapterInterface;
@@ -68,6 +69,11 @@ class Table
      * @var ForeignKey[]
      */
     protected $foreignKeys = array();
+
+    /**
+     * @var Constraint[]
+     */
+    protected $constraints = array();
 
     /**
      * @var array
@@ -277,6 +283,28 @@ class Table
     public function getForeignKeys()
     {
         return $this->foreignKeys;
+    }
+
+    /**
+     * Gets an array of constraint waiting to be commited.
+     *
+     * @param Constraint[] $constraints constraint
+     * @return Table
+     */
+    public function setConstraints($constraints)
+    {
+        $this->constraints = $constraints;
+        return $this;
+    }
+
+    /**
+     * Gets an array of constraint waiting to be commited.
+     *
+     * @return array|Constraint[]
+     */
+    public function getConstraints()
+    {
+        return $this->constraints;
     }
 
     /**
@@ -553,6 +581,59 @@ class Table
     }
 
     /**
+     * Add a constraint to a database table.
+     *
+     * @param array $columns Columns
+     * @param $type
+     * @param null $name
+     * @return Table
+     */
+    public function addConstraint($columns, $type, $name = null)
+    {
+        $constraint = new Constraint();
+
+        $constraint->setColumns($columns)
+            ->setName($name)
+            ->setType($type);
+        $this->constraints[] = $constraint;
+
+        return $this;
+    }
+
+    /**
+     * Removes the given constraint from the table.
+     *
+     * @param string|array $columns    Column(s)
+     * @param null|string  $constraint Constraint names
+     * @return Table
+     */
+    public function dropConstraint($columns, $constraint = null)
+    {
+        if (is_string($columns)) {
+            $columns = array($columns);
+        }
+        if ($constraint) {
+            $this->getAdapter()->dropConstraint($this->getName(), array(), $constraint);
+        } else {
+            $this->getAdapter()->dropConstraint($this->getName(), $columns);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Checks to see if a constraint exists.
+     *
+     * @param  string|array $columns    Column(s)
+     * @param  null|string  $constraint Constraint names
+     * @return boolean
+     */
+    public function hasConstraint($columns, $constraint = null)
+    {
+        return $this->getAdapter()->hasConstraint($this->getName(), $columns, $constraint);
+    }
+
+    /**
      * Add timestamp columns created_at and updated_at to the table.
      *
      * @return Table
@@ -631,6 +712,10 @@ class Table
 
         foreach ($this->getForeignKeys() as $foreignKey) {
             $this->getAdapter()->addForeignKey($this, $foreignKey);
+        }
+
+        foreach ($this->getConstraints() as $constraint) {
+            $this->getAdapter()->addConstraint($this, $constraint);
         }
 
         $this->saveData();
