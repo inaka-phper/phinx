@@ -213,7 +213,8 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
          // set the primary key(s)
         if (isset($options['primary_key'])) {
             $sql = rtrim($sql);
-            $sql .= sprintf(' CONSTRAINT %s_pkey PRIMARY KEY (', $table->getName());
+            $key_name = isset($options['primary_key_name']) ? $options['primary_key_name'] : $table->getName() . "_pkey";
+            $sql .= sprintf(' CONSTRAINT "%s" PRIMARY KEY (', $key_name);
             if (is_string($options['primary_key'])) {       // handle primary_key => 'id'
                 $sql .= $this->quoteColumnName($options['primary_key']);
             } elseif (is_array($options['primary_key'])) { // handle primary_key => array('tag_id', 'resource_id')
