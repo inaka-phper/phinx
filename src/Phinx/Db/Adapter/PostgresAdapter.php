@@ -818,6 +818,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
                 }
                 return array('name' => $type);
             case static::PHINX_TYPE_TEXT:
+            case static::PHINX_TYPE_XML:
             case static::PHINX_TYPE_TIME:
             case static::PHINX_TYPE_DATE:
             case static::PHINX_TYPE_BOOLEAN:
@@ -883,6 +884,8 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
                 return static::PHINX_TYPE_CHAR;
             case 'text':
                 return static::PHINX_TYPE_TEXT;
+            case 'xml':
+                return static::PHINX_TYPE_XML;
             case 'json':
                 return static::PHINX_TYPE_JSON;
             case 'jsonb':
@@ -1260,7 +1263,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
      */
     public function getColumnTypes()
     {
-        return array_merge(parent::getColumnTypes(), array('json', 'jsonb'));
+        return array_merge(parent::getColumnTypes(), array('json', 'jsonb', 'xml'));
     }
 
     /**
