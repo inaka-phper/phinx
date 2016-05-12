@@ -252,7 +252,18 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
             }
         }
 
-        $sql .= ');';
+        $sql .= ')';
+
+        // with storage_parameter
+        if (isset($options['with']) && is_array($options['with'])) {
+            $join = array_map(function ($key, $value) {
+                return $key . "=" . $value;
+            }, array_keys($options['with']), array_values($options['with']));
+
+            $sql .= sprintf(" WITH (%s)", implode(",", $join));
+        }
+
+        $sql .= ';';
 
         // process column comments
         if (!empty($this->columnsWithComments)) {
