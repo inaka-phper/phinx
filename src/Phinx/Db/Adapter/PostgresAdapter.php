@@ -1123,7 +1123,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         $columns = is_array($constraint->getColumns()) ? '"' . implode('", "', $constraint->getColumns()) . '"' : $constraint->getColumns();
 
         $def = sprintf(
-            ' CONSTRAINT "%s" %s ("%s")',
+            ' CONSTRAINT "%s" %s (%s)',
             $constraintName,
             $constraint->getType(),
             $columns
