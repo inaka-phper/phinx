@@ -67,7 +67,7 @@ class Constraint
     }
 
     /**
-     * @return array
+     * @return mixed
      */
     public function getColumns()
     {
@@ -75,7 +75,7 @@ class Constraint
     }
 
     /**
-     * @param array $columns
+     * @param mixed $columns
      * @return Constraint
      */
     public function setColumns($columns)
