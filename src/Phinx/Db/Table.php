@@ -583,7 +583,7 @@ class Table
     /**
      * Add a constraint to a database table.
      *
-     * @param array $columns Columns
+     * @param mixed $columns Columns
      * @param $type
      * @param null $name
      * @return Table
