@@ -71,6 +71,9 @@ interface AdapterInterface
     const PHINX_TYPE_ENUM           = 'enum';
     const PHINX_TYPE_SET            = 'set';
 
+    // only for postgresql so far
+    const PHINX_TYPE_XML           = 'xml';
+
     /**
      * Get all migrated version numbers.
      *
